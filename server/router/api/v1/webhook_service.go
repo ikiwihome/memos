@@ -3,7 +3,6 @@ package v1
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	"google.golang.org/grpc/codes"
@@ -24,7 +23,7 @@ func (s *APIV1Service) CreateWebhook(ctx context.Context, request *v1pb.CreateWe
 	webhook, err := s.Store.CreateWebhook(ctx, &store.Webhook{
 		CreatorID: currentUser.ID,
 		Name:      request.Name,
-		URL:       strings.TrimSpace(request.Url),
+		URL:       request.Url,
 	})
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to create webhook, error: %+v", err)

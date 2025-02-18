@@ -24,6 +24,7 @@ import (
 	"github.com/usememos/memos/server/router/rss"
 	"github.com/usememos/memos/server/runner/memopayload"
 	"github.com/usememos/memos/server/runner/s3presign"
+	"github.com/usememos/memos/server/runner/version"
 	"github.com/usememos/memos/store"
 )
 
@@ -143,11 +144,14 @@ func (s *Server) Shutdown(ctx context.Context) {
 func (s *Server) StartBackgroundRunners(ctx context.Context) {
 	s3presignRunner := s3presign.NewRunner(s.Store)
 	s3presignRunner.RunOnce(ctx)
+	versionRunner := version.NewRunner(s.Store, s.Profile)
+	versionRunner.RunOnce(ctx)
 	memopayloadRunner := memopayload.NewRunner(s.Store)
 	// Rebuild all memos' payload after server starts.
 	memopayloadRunner.RunOnce(ctx)
 
 	go s3presignRunner.Run(ctx)
+	go versionRunner.Run(ctx)
 }
 
 func (s *Server) getOrUpsertWorkspaceBasicSetting(ctx context.Context) (*storepb.WorkspaceBasicSetting, error) {

@@ -1,16 +1,17 @@
 import { BellIcon } from "lucide-react";
-import { observer } from "mobx-react-lite";
 import { useEffect } from "react";
 import Empty from "@/components/Empty";
 import MemoCommentMessage from "@/components/Inbox/MemoCommentMessage";
+import VersionUpdateMessage from "@/components/Inbox/VersionUpdateMessage";
 import MobileHeader from "@/components/MobileHeader";
-import { userStore } from "@/store/v2";
+import { useInboxStore } from "@/store/v1";
 import { Inbox_Status, Inbox_Type } from "@/types/proto/api/v1/inbox_service";
 import { useTranslate } from "@/utils/i18n";
 
-const Inboxes = observer(() => {
+const Inboxes = () => {
   const t = useTranslate();
-  const inboxes = userStore.state.inboxes.sort((a, b) => {
+  const inboxStore = useInboxStore();
+  const inboxes = inboxStore.inboxes.sort((a, b) => {
     if (a.status === b.status) {
       return 0;
     }
@@ -18,7 +19,7 @@ const Inboxes = observer(() => {
   });
 
   useEffect(() => {
-    userStore.fetchInboxes();
+    inboxStore.fetchInboxes();
   }, []);
 
   return (
@@ -43,6 +44,8 @@ const Inboxes = observer(() => {
               {inboxes.map((inbox) => {
                 if (inbox.type === Inbox_Type.MEMO_COMMENT) {
                   return <MemoCommentMessage key={`${inbox.name}-${inbox.status}`} inbox={inbox} />;
+                } else if (inbox.type === Inbox_Type.VERSION_UPDATE) {
+                  return <VersionUpdateMessage key={`${inbox.name}-${inbox.status}`} inbox={inbox} />;
                 }
                 return undefined;
               })}
@@ -52,6 +55,6 @@ const Inboxes = observer(() => {
       </div>
     </section>
   );
-});
+};
 
 export default Inboxes;

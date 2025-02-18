@@ -11,12 +11,13 @@ import MobileHeader from "@/components/MobileHeader";
 import useCurrentUser from "@/hooks/useCurrentUser";
 import useNavigateTo from "@/hooks/useNavigateTo";
 import useResponsiveWidth from "@/hooks/useResponsiveWidth";
-import { memoNamePrefix, useMemoStore } from "@/store/v1";
-import { workspaceStore } from "@/store/v2";
+import { memoNamePrefix, useMemoStore, useWorkspaceSettingStore } from "@/store/v1";
 import { MemoRelation_Type } from "@/types/proto/api/v1/memo_relation_service";
 import { Memo } from "@/types/proto/api/v1/memo_service";
+import { WorkspaceMemoRelatedSetting, WorkspaceSettingKey } from "@/types/proto/store/workspace_setting";
 import { cn } from "@/utils";
 import { useTranslate } from "@/utils/i18n";
+import { memoLink } from "@/utils/memo";
 
 const MemoDetail = () => {
   const t = useTranslate();
@@ -24,12 +25,15 @@ const MemoDetail = () => {
   const params = useParams();
   const navigateTo = useNavigateTo();
   const { state: locationState } = useLocation();
+  const workspaceSettingStore = useWorkspaceSettingStore();
   const currentUser = useCurrentUser();
   const memoStore = useMemoStore();
   const uid = params.uid;
   const memoName = `${memoNamePrefix}${uid}`;
   const memo = memoStore.getMemoByName(memoName);
-  const workspaceMemoRelatedSetting = workspaceStore.state.memoRelatedSetting;
+  const workspaceMemoRelatedSetting = WorkspaceMemoRelatedSetting.fromPartial(
+    workspaceSettingStore.getWorkspaceSettingByKey(WorkspaceSettingKey.MEMO_RELATED)?.memoRelatedSetting || {},
+  );
   const [parentMemo, setParentMemo] = useState<Memo | undefined>(undefined);
   const [showCommentEditor, setShowCommentEditor] = useState(false);
   const commentRelations =
@@ -94,7 +98,7 @@ const MemoDetail = () => {
             <div className="w-auto inline-block mb-2">
               <Link
                 className="px-3 py-1 border rounded-lg max-w-xs w-auto text-sm flex flex-row justify-start items-center flex-nowrap text-gray-600 dark:text-gray-400 dark:border-gray-500 hover:shadow hover:opacity-80"
-                to={`/${parentMemo.name}`}
+                to={memoLink(parentMemo.name)}
                 state={locationState}
                 viewTransition
               >
@@ -112,7 +116,6 @@ const MemoDetail = () => {
             showCreator
             showVisibility
             showPinned
-            showNsfwContent
           />
           <div className="pt-8 pb-16 w-full">
             <h2 id="comments" className="sr-only">

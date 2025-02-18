@@ -1,23 +1,31 @@
 import { Button, Checkbox, Input } from "@usememos/mui";
 import { LoaderIcon } from "lucide-react";
-import { observer } from "mobx-react-lite";
 import { ClientError } from "nice-grpc-web";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import { authServiceClient } from "@/grpcweb";
 import useLoading from "@/hooks/useLoading";
 import useNavigateTo from "@/hooks/useNavigateTo";
-import { workspaceStore } from "@/store/v2";
-import { initialUserStore } from "@/store/v2/user";
+import { useCommonContext } from "@/layouts/CommonContextProvider";
+import { useUserStore } from "@/store/v1";
 import { useTranslate } from "@/utils/i18n";
 
-const PasswordSignInForm = observer(() => {
+const PasswordSignInForm = () => {
   const t = useTranslate();
   const navigateTo = useNavigateTo();
+  const commonContext = useCommonContext();
+  const userStore = useUserStore();
   const actionBtnLoadingState = useLoading(false);
-  const [username, setUsername] = useState(workspaceStore.state.profile.mode === "demo" ? "yourselfhosted" : "");
-  const [password, setPassword] = useState(workspaceStore.state.profile.mode === "demo" ? "yourselfhosted" : "");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(true);
+
+  useEffect(() => {
+    if (commonContext.profile.mode === "demo") {
+      setUsername("yourselfhosted");
+      setPassword("yourselfhosted");
+    }
+  }, [commonContext.profile.mode]);
 
   const handleUsernameInputChanged = (e: React.ChangeEvent<HTMLInputElement>) => {
     const text = e.target.value as string;
@@ -46,7 +54,7 @@ const PasswordSignInForm = observer(() => {
     try {
       actionBtnLoadingState.setLoading();
       await authServiceClient.signIn({ username, password, neverExpire: remember });
-      await initialUserStore();
+      await userStore.fetchCurrentUser();
       navigateTo("/");
     } catch (error: any) {
       console.error(error);
@@ -109,6 +117,6 @@ const PasswordSignInForm = observer(() => {
       </div>
     </form>
   );
-});
+};
 
 export default PasswordSignInForm;

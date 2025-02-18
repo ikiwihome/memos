@@ -129,14 +129,17 @@ func (s *APIV1Service) GetResource(ctx context.Context, request *v1pb.GetResourc
 }
 
 func (s *APIV1Service) GetResourceBinary(ctx context.Context, request *v1pb.GetResourceBinaryRequest) (*httpbody.HttpBody, error) {
-	resourceUID, err := ExtractResourceUIDFromName(request.Name)
-	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid resource id: %v", err)
-	}
-	resource, err := s.Store.GetResource(ctx, &store.FindResource{
+	resourceFind := &store.FindResource{
 		GetBlob: true,
-		UID:     &resourceUID,
-	})
+	}
+	if request.Name != "" {
+		resourceUID, err := ExtractResourceUIDFromName(request.Name)
+		if err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "invalid resource id: %v", err)
+		}
+		resourceFind.UID = &resourceUID
+	}
+	resource, err := s.Store.GetResource(ctx, resourceFind)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to get resource: %v", err)
 	}
@@ -363,7 +366,7 @@ func SaveResourceBlob(ctx context.Context, s *store.Store, create *store.Resourc
 }
 
 func (s *APIV1Service) GetResourceBlob(resource *store.Resource) ([]byte, error) {
-	// For local storage, read the file from the local disk.
+	blob := resource.Blob
 	if resource.StorageType == storepb.ResourceStorageType_LOCAL {
 		resourcePath := filepath.FromSlash(resource.Reference)
 		if !filepath.IsAbs(resourcePath) {
@@ -378,14 +381,12 @@ func (s *APIV1Service) GetResourceBlob(resource *store.Resource) ([]byte, error)
 			return nil, errors.Wrap(err, "failed to open the file")
 		}
 		defer file.Close()
-		blob, err := io.ReadAll(file)
+		blob, err = io.ReadAll(file)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to read the file")
 		}
-		return blob, nil
 	}
-	// For database storage, return the blob from the database.
-	return resource.Blob, nil
+	return blob, nil
 }
 
 const (

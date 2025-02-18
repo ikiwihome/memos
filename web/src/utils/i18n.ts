@@ -28,7 +28,7 @@ export const findNearestMatchedLanguage = (language: string): Locale => {
     }
   }
 
-  // should be "en", so the selector is not empty if there isn't a translation for current user's language
+  // should be "zh-Hans", so the selector is not empty if there isn't a translation for current user's language
   return (i18n.store.options.fallbackLng as FallbackLngObjList).default[0] as Locale;
 };
 
@@ -45,9 +45,4 @@ type TypedT = (key: Translations, params?: Record<string, any>) => string;
 export const useTranslate = (): TypedT => {
   const { t } = useTranslation<Translations>();
   return t;
-};
-
-export const isValidateLocale = (locale: string | undefined | null): boolean => {
-  if (!locale) return false;
-  return locales.includes(locale);
 };

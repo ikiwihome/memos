@@ -1,8 +1,10 @@
 import { Link as MLink, Tooltip } from "@mui/joy";
 import { useState } from "react";
 import { markdownServiceClient } from "@/grpcweb";
-import { workspaceStore } from "@/store/v2";
+import { useWorkspaceSettingStore } from "@/store/v1";
 import { LinkMetadata } from "@/types/proto/api/v1/markdown_service";
+import { WorkspaceMemoRelatedSetting } from "@/types/proto/api/v1/workspace_setting_service";
+import { WorkspaceSettingKey } from "@/types/proto/store/workspace_setting";
 
 interface Props {
   url: string;
@@ -19,7 +21,10 @@ const getFaviconWithGoogleS2 = (url: string) => {
 };
 
 const Link: React.FC<Props> = ({ text, url }: Props) => {
-  const workspaceMemoRelatedSetting = workspaceStore.state.memoRelatedSetting;
+  const workspaceSettingStore = useWorkspaceSettingStore();
+  const workspaceMemoRelatedSetting =
+    workspaceSettingStore.getWorkspaceSettingByKey(WorkspaceSettingKey.MEMO_RELATED).memoRelatedSetting ||
+    WorkspaceMemoRelatedSetting.fromPartial({});
   const [initialized, setInitialized] = useState<boolean>(false);
   const [showTooltip, setShowTooltip] = useState<boolean>(false);
   const [linkMetadata, setLinkMetadata] = useState<LinkMetadata | undefined>();
@@ -60,7 +65,7 @@ const Link: React.FC<Props> = ({ text, url }: Props) => {
       open={showTooltip}
       arrow
     >
-      <MLink underline="always" target="_blank" href={url} rel="noopener noreferrer">
+      <MLink underline="always" target="_blank" href={url}>
         <span onMouseEnter={handleMouseEnter} onMouseLeave={() => setShowTooltip(false)}>
           {text || url}
         </span>

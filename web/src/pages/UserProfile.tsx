@@ -11,8 +11,7 @@ import MobileHeader from "@/components/MobileHeader";
 import PagedMemoList from "@/components/PagedMemoList";
 import UserAvatar from "@/components/UserAvatar";
 import useLoading from "@/hooks/useLoading";
-import { useMemoFilterStore } from "@/store/v1";
-import { userStore } from "@/store/v2";
+import { useMemoFilterStore, useUserStore } from "@/store/v1";
 import { Direction, State } from "@/types/proto/api/v1/common";
 import { Memo } from "@/types/proto/api/v1/memo_service";
 import { User } from "@/types/proto/api/v1/user_service";
@@ -21,6 +20,7 @@ import { useTranslate } from "@/utils/i18n";
 const UserProfile = () => {
   const t = useTranslate();
   const params = useParams();
+  const userStore = useUserStore();
   const loadingState = useLoading();
   const [user, setUser] = useState<User>();
   const memoFilterStore = useMemoFilterStore();
@@ -32,7 +32,7 @@ const UserProfile = () => {
     }
 
     userStore
-      .getOrFetchUserByName(username)
+      .fetchUserByUsername(username)
       .then((user) => {
         setUser(user);
         loadingState.setFinish();

@@ -6,8 +6,9 @@ import { useState } from "react";
 import { toast } from "react-hot-toast";
 import { convertFileToBase64 } from "@/helpers/utils";
 import useCurrentUser from "@/hooks/useCurrentUser";
-import { userStore, workspaceStore } from "@/store/v2";
+import { useUserStore, useWorkspaceSettingStore } from "@/store/v1";
 import { User as UserPb } from "@/types/proto/api/v1/user_service";
+import { WorkspaceGeneralSetting, WorkspaceSettingKey } from "@/types/proto/store/workspace_setting";
 import { useTranslate } from "@/utils/i18n";
 import { generateDialog } from "./Dialog";
 import UserAvatar from "./UserAvatar";
@@ -22,9 +23,10 @@ interface State {
   description: string;
 }
 
-const UpdateAccountDialog = ({ destroy }: Props) => {
+const UpdateAccountDialog: React.FC<Props> = ({ destroy }: Props) => {
   const t = useTranslate();
   const currentUser = useCurrentUser();
+  const userStore = useUserStore();
   const [state, setState] = useState<State>({
     avatarUrl: currentUser.avatarUrl,
     username: currentUser.username,
@@ -32,7 +34,9 @@ const UpdateAccountDialog = ({ destroy }: Props) => {
     email: currentUser.email,
     description: currentUser.description,
   });
-  const workspaceGeneralSetting = workspaceStore.state.generalSetting;
+  const workspaceSettingStore = useWorkspaceSettingStore();
+  const workspaceGeneralSetting =
+    workspaceSettingStore.getWorkspaceSettingByKey(WorkspaceSettingKey.GENERAL)?.generalSetting || WorkspaceGeneralSetting.fromPartial({});
 
   const handleCloseBtnClick = () => {
     destroy();

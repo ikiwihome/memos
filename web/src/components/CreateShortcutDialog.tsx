@@ -6,7 +6,7 @@ import { toast } from "react-hot-toast";
 import { userServiceClient } from "@/grpcweb";
 import useCurrentUser from "@/hooks/useCurrentUser";
 import useLoading from "@/hooks/useLoading";
-import { userStore } from "@/store/v2";
+import { useUserStore } from "@/store/v1";
 import { Shortcut } from "@/types/proto/api/v1/user_service";
 import { useTranslate } from "@/utils/i18n";
 import { generateUUID } from "@/utils/uuid";
@@ -20,6 +20,7 @@ const CreateShortcutDialog: React.FC<Props> = (props: Props) => {
   const { destroy } = props;
   const t = useTranslate();
   const user = useCurrentUser();
+  const userStore = useUserStore();
   const [shortcut, setShortcut] = useState(Shortcut.fromPartial({ ...props.shortcut }));
   const requestState = useLoading(false);
   const isCreating = !props.shortcut;
@@ -64,22 +65,22 @@ const CreateShortcutDialog: React.FC<Props> = (props: Props) => {
   return (
     <>
       <div className="dialog-header-container">
-        <p className="title-text">{`${isCreating ? t("common.create") : t("common.edit")} ${t("common.shortcuts")}`}</p>
+        <p className="title-text">{`${isCreating ? "Create" : "Edit"} Shortcut`}</p>
         <Button size="sm" variant="plain" onClick={() => destroy()}>
           <XIcon className="w-5 h-auto" />
         </Button>
       </div>
       <div className="dialog-content-container max-w-md min-w-72">
         <div className="w-full flex flex-col justify-start items-start mb-3">
-          <span className="text-sm whitespace-nowrap mb-1">{t("common.title")}</span>
+          <span className="text-sm whitespace-nowrap mb-1">Title</span>
           <Input className="w-full" type="text" placeholder="" value={shortcut.title} onChange={onShortcutTitleChange} />
-          <span className="text-sm whitespace-nowrap mt-3 mb-1">{t("common.filter")}</span>
+          <span className="text-sm whitespace-nowrap mt-3 mb-1">Filter</span>
           <Textarea
             className="w-full"
             minRows={3}
             maxRows={5}
             size="sm"
-            placeholder={t("common.shortcut-filter")}
+            placeholder={"Shortcut filter"}
             value={shortcut.filter}
             onChange={onShortcutFilterChange}
           />

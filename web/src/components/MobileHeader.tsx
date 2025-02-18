@@ -1,6 +1,8 @@
 import useWindowScroll from "react-use/lib/useWindowScroll";
 import useResponsiveWidth from "@/hooks/useResponsiveWidth";
-import { workspaceStore } from "@/store/v2";
+import { useWorkspaceSettingStore } from "@/store/v1";
+import { WorkspaceGeneralSetting } from "@/types/proto/api/v1/workspace_setting_service";
+import { WorkspaceSettingKey } from "@/types/proto/store/workspace_setting";
 import { cn } from "@/utils";
 import NavigationDrawer from "./NavigationDrawer";
 
@@ -13,12 +15,14 @@ const MobileHeader = (props: Props) => {
   const { className, children } = props;
   const { sm } = useResponsiveWidth();
   const { y: offsetTop } = useWindowScroll();
-  const workspaceGeneralSetting = workspaceStore.state.generalSetting;
+  const workspaceSettingStore = useWorkspaceSettingStore();
+  const workspaceGeneralSetting =
+    workspaceSettingStore.getWorkspaceSettingByKey(WorkspaceSettingKey.GENERAL).generalSetting || WorkspaceGeneralSetting.fromPartial({});
 
   return (
     <div
       className={cn(
-        "sticky top-0 pt-3 pb-2 sm:pt-2 px-4 sm:px-6 sm:mb-1 bg-zinc-50 dark:bg-zinc-900 bg-opacity-80 backdrop-blur-lg flex md:hidden flex-row justify-between items-center w-full h-auto flex-nowrap shrink-0 z-1",
+        "sticky top-0 pt-3 pb-2 sm:pt-2 px-4 sm:px-6 sm:mb-1 bg-zinc-100 dark:bg-zinc-900 bg-opacity-80 backdrop-blur-lg flex md:hidden flex-row justify-between items-center w-full h-auto flex-nowrap shrink-0 z-1",
         offsetTop > 0 && "shadow-md",
         className,
       )}

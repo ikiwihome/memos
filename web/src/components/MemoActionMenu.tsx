@@ -21,6 +21,7 @@ import { NodeType } from "@/types/proto/api/v1/markdown_service";
 import { Memo } from "@/types/proto/api/v1/memo_service";
 import { cn } from "@/utils";
 import { useTranslate } from "@/utils/i18n";
+import { memoLink } from "@/utils/memo";
 
 interface Props {
   memo: Memo;
@@ -51,7 +52,7 @@ const MemoActionMenu = (props: Props) => {
   const userStatsStore = useUserStatsStore();
   const isArchived = memo.state === State.ARCHIVED;
   const hasCompletedTaskList = checkHasCompletedTaskList(memo);
-  const isInMemoDetailPage = location.pathname.startsWith(`/${memo.name}`);
+  const isInMemoDetailPage = location.pathname.startsWith(memoLink(memo.name));
 
   const memoUpdatedCallback = () => {
     // Refresh user stats.
@@ -114,7 +115,7 @@ const MemoActionMenu = (props: Props) => {
   };
 
   const handleCopyLink = () => {
-    copy(`${window.location.origin}/${memo.name}`);
+    copy(`${window.location.origin}${memoLink(memo.name)}`);
     toast.success(t("message.succeed-copy-link"));
   };
 

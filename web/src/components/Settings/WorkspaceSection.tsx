@@ -6,8 +6,7 @@ import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import { Link } from "react-router-dom";
 import { identityProviderServiceClient } from "@/grpcweb";
-import { workspaceSettingNamePrefix } from "@/store/v1";
-import { workspaceStore } from "@/store/v2";
+import { workspaceSettingNamePrefix, useWorkspaceSettingStore } from "@/store/v1";
 import { IdentityProvider } from "@/types/proto/api/v1/idp_service";
 import { WorkspaceGeneralSetting } from "@/types/proto/api/v1/workspace_setting_service";
 import { WorkspaceSettingKey } from "@/types/proto/store/workspace_setting";
@@ -16,15 +15,16 @@ import showUpdateCustomizedProfileDialog from "../UpdateCustomizedProfileDialog"
 
 const WorkspaceSection = () => {
   const t = useTranslate();
+  const workspaceSettingStore = useWorkspaceSettingStore();
   const originalSetting = WorkspaceGeneralSetting.fromPartial(
-    workspaceStore.getWorkspaceSettingByKey(WorkspaceSettingKey.GENERAL)?.generalSetting || {},
+    workspaceSettingStore.getWorkspaceSettingByKey(WorkspaceSettingKey.GENERAL)?.generalSetting || {},
   );
   const [workspaceGeneralSetting, setWorkspaceGeneralSetting] = useState<WorkspaceGeneralSetting>(originalSetting);
   const [identityProviderList, setIdentityProviderList] = useState<IdentityProvider[]>([]);
 
   useEffect(() => {
     setWorkspaceGeneralSetting(originalSetting);
-  }, [workspaceStore.getWorkspaceSettingByKey(WorkspaceSettingKey.GENERAL)]);
+  }, [workspaceSettingStore.getWorkspaceSettingByKey(WorkspaceSettingKey.GENERAL)]);
 
   const handleUpdateCustomizedProfileButtonClick = () => {
     showUpdateCustomizedProfileDialog();
@@ -41,7 +41,7 @@ const WorkspaceSection = () => {
 
   const handleSaveGeneralSetting = async () => {
     try {
-      await workspaceStore.upsertWorkspaceSetting({
+      await workspaceSettingStore.setWorkspaceSetting({
         name: `${workspaceSettingNamePrefix}${WorkspaceSettingKey.GENERAL}`,
         generalSetting: workspaceGeneralSetting,
       });
@@ -75,7 +75,7 @@ const WorkspaceSection = () => {
         </Button>
       </div>
       <Divider />
-      <p className="font-medium text-gray-700 dark:text-gray-500">{t("setting.system-section.title")}</p>
+      <p className="font-medium text-gray-700 dark:text-gray-500">General</p>
       <div className="w-full flex flex-row justify-between items-center">
         <span>{t("setting.system-section.additional-style")}</span>
       </div>

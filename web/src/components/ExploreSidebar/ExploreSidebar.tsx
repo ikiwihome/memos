@@ -3,7 +3,6 @@ import SearchBar from "@/components/SearchBar";
 import { useUserStatsStore } from "@/store/v1";
 import { cn } from "@/utils";
 import TagsSection from "../HomeSidebar/TagsSection";
-import MemoFilters from "../MemoFilters";
 import StatisticsView from "../StatisticsView";
 
 interface Props {
@@ -29,7 +28,6 @@ const ExploreSidebar = (props: Props) => {
       )}
     >
       <SearchBar />
-      <MemoFilters />
       <StatisticsView />
       <TagsSection readonly={true} />
     </aside>

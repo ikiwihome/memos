@@ -4,21 +4,28 @@ import { ClientError } from "nice-grpc-web";
 import { useState } from "react";
 import { toast } from "react-hot-toast";
 import { Link } from "react-router-dom";
-import AuthFooter from "@/components/AuthFooter";
+import AppearanceSelect from "@/components/AppearanceSelect";
+import LocaleSelect from "@/components/LocaleSelect";
 import { authServiceClient } from "@/grpcweb";
 import useLoading from "@/hooks/useLoading";
 import useNavigateTo from "@/hooks/useNavigateTo";
-import { workspaceStore } from "@/store/v2";
-import { initialUserStore } from "@/store/v2/user";
+import { useCommonContext } from "@/layouts/CommonContextProvider";
+import { useUserStore, useWorkspaceSettingStore } from "@/store/v1";
+import { WorkspaceGeneralSetting } from "@/types/proto/api/v1/workspace_setting_service";
+import { WorkspaceSettingKey } from "@/types/proto/store/workspace_setting";
 import { useTranslate } from "@/utils/i18n";
 
 const SignUp = () => {
   const t = useTranslate();
   const navigateTo = useNavigateTo();
+  const commonContext = useCommonContext();
+  const workspaceSettingStore = useWorkspaceSettingStore();
+  const userStore = useUserStore();
   const actionBtnLoadingState = useLoading(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const workspaceGeneralSetting = workspaceStore.state.generalSetting;
+  const workspaceGeneralSetting =
+    workspaceSettingStore.getWorkspaceSettingByKey(WorkspaceSettingKey.GENERAL).generalSetting || WorkspaceGeneralSetting.fromPartial({});
 
   const handleUsernameInputChanged = (e: React.ChangeEvent<HTMLInputElement>) => {
     const text = e.target.value as string;
@@ -28,6 +35,14 @@ const SignUp = () => {
   const handlePasswordInputChanged = (e: React.ChangeEvent<HTMLInputElement>) => {
     const text = e.target.value as string;
     setPassword(text);
+  };
+
+  const handleLocaleSelectChange = (locale: Locale) => {
+    commonContext.setLocale(locale);
+  };
+
+  const handleAppearanceSelectChange = (appearance: Appearance) => {
+    commonContext.setAppearance(appearance);
   };
 
   const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -47,7 +62,7 @@ const SignUp = () => {
     try {
       actionBtnLoadingState.setLoading();
       await authServiceClient.signUp({ username, password });
-      await initialUserStore();
+      await userStore.fetchCurrentUser();
       navigateTo("/");
     } catch (error: any) {
       console.error(error);
@@ -121,7 +136,7 @@ const SignUp = () => {
         ) : (
           <p className="w-full text-2xl mt-2 dark:text-gray-500">Sign up is not allowed.</p>
         )}
-        {!workspaceStore.state.profile.owner ? (
+        {!commonContext.profile.owner ? (
           <p className="w-full mt-4 text-sm font-medium dark:text-gray-500">{t("auth.host-tip")}</p>
         ) : (
           <p className="w-full mt-4 text-sm">
@@ -132,7 +147,10 @@ const SignUp = () => {
           </p>
         )}
       </div>
-      <AuthFooter />
+      <div className="mt-4 flex flex-row items-center justify-center w-full gap-2">
+        <LocaleSelect value={commonContext.locale} onChange={handleLocaleSelectChange} />
+        <AppearanceSelect value={commonContext.appearance as Appearance} onChange={handleAppearanceSelectChange} />
+      </div>
     </div>
   );
 };

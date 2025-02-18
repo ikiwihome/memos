@@ -1,19 +1,28 @@
 import { useColorScheme } from "@mui/joy";
-import { observer } from "mobx-react-lite";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Outlet } from "react-router-dom";
+import useLocalStorage from "react-use/lib/useLocalStorage";
 import { getSystemColorScheme } from "./helpers/utils";
 import useNavigateTo from "./hooks/useNavigateTo";
-import { userStore, workspaceStore } from "./store/v2";
+import { useCommonContext } from "./layouts/CommonContextProvider";
+import { useUserStore, useWorkspaceSettingStore } from "./store/v1";
+import { WorkspaceGeneralSetting, WorkspaceSettingKey } from "./types/proto/store/workspace_setting";
 
-const App = observer(() => {
+const App = () => {
   const { i18n } = useTranslation();
   const navigateTo = useNavigateTo();
   const { mode, setMode } = useColorScheme();
-  const workspaceProfile = workspaceStore.state.profile;
-  const userSetting = userStore.state.userSetting;
-  const workspaceGeneralSetting = workspaceStore.state.generalSetting;
+  const workspaceSettingStore = useWorkspaceSettingStore();
+  const userStore = useUserStore();
+  const commonContext = useCommonContext();
+  const [, setLocale] = useLocalStorage("locale", "zh-Hans");
+  const [, setAppearance] = useLocalStorage("appearance", "system");
+  const workspaceProfile = commonContext.profile;
+  const userSetting = userStore.userSetting;
+
+  const workspaceGeneralSetting =
+    workspaceSettingStore.getWorkspaceSettingByKey(WorkspaceSettingKey.GENERAL).generalSetting || WorkspaceGeneralSetting.fromPartial({});
 
   // Redirect to sign up page if no instance owner.
   useEffect(() => {
@@ -69,8 +78,7 @@ const App = observer(() => {
   }, [workspaceGeneralSetting.customProfile]);
 
   useEffect(() => {
-    const currentLocale = workspaceStore.state.locale;
-    // This will trigger re-rendering of the whole app.
+    const currentLocale = commonContext.locale;
     i18n.changeLanguage(currentLocale);
     document.documentElement.setAttribute("lang", currentLocale);
     if (["ar", "fa"].includes(currentLocale)) {
@@ -78,15 +86,17 @@ const App = observer(() => {
     } else {
       document.documentElement.setAttribute("dir", "ltr");
     }
-  }, [workspaceStore.state.locale]);
+    setLocale(currentLocale);
+  }, [commonContext.locale]);
 
   useEffect(() => {
-    let currentAppearance = workspaceStore.state.appearance as Appearance;
+    let currentAppearance = commonContext.appearance as Appearance;
     if (currentAppearance === "system") {
       currentAppearance = getSystemColorScheme();
     }
     setMode(currentAppearance);
-  }, [workspaceStore.state.appearance]);
+    setAppearance(currentAppearance);
+  }, [commonContext.appearance]);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -102,13 +112,11 @@ const App = observer(() => {
       return;
     }
 
-    workspaceStore.state.setPartial({
-      locale: userSetting.locale || workspaceStore.state.locale,
-      appearance: userSetting.appearance || workspaceStore.state.appearance,
-    });
+    commonContext.setLocale(userSetting.locale);
+    commonContext.setAppearance(userSetting.appearance);
   }, [userSetting?.locale, userSetting?.appearance]);
 
   return <Outlet />;
-});
+};
 
 export default App;
